@@ -1,0 +1,113 @@
+Prompt 
+explain me this code line by line so that i can create a prompt.txt file and upload in github
+
+
+1. Includes and Constants
+C
+#include <stdio.h>
+#include <stdlib.h>
+
+#define WIDTH 60
+#define HEIGHT 30
+#define MAX_SHAPES 100
+<stdio.h> & <stdlib.h>: Standard C libraries for input/output (like printf, scanf) and absolute value math operations (abs).
+
+WIDTH & HEIGHT: Defines the dimensions of our 2D character array (the canvas).
+
+MAX_SHAPES: Sets a hard limit on how many shapes can exist in the program's memory at once to prevent array overflow.
+
+2. Data Structures
+C
+typedef enum { LINE, RECTANGLE, CIRCLE, TRIANGLE } ShapeType;
+
+typedef struct {
+    int id;
+    ShapeType type;
+    int x1, y1, x2, y2, x3, y3;
+    int r;
+    int active;
+} Shape;
+ShapeType Enum: Gives readable names to our supported shapes (0 = LINE, 1 = RECTANGLE, etc.).
+
+Shape Struct: This is the core data unit of our "Scene Graph." Instead of just drawing a shape and forgetting it, we store its properties.
+
+id: A unique identifier for the user to target the shape.
+
+x1...y3, r: Coordinate and radius data. Only the relevant variables are used depending on the shape type.
+
+active: A boolean flag (1 or 0). If 0, the shape is considered "deleted" and won't be drawn.
+
+3. Global Variables
+C
+char canvas[HEIGHT][WIDTH];
+Shape shapes[MAX_SHAPES];
+int shapeCount = 0;
+int nextId = 1;
+canvas: The 2D array where the actual * and _ characters are stored.
+
+shapes: The array storing the mathematical definitions of every shape the user creates.
+
+shapeCount & nextId: Track how many shapes exist and assign the next available ID.
+
+4. Basic Canvas Operations
+C
+void initCanvas() { /* Fills canvas with '_' */ }
+void displayCanvas() { /* Prints the 2D array to the console */ }
+void drawPoint(int x, int y) { /* Places an '*' at (x,y) if within bounds */ }
+initCanvas: Resets the screen to a blank state using underscores (_).
+
+displayCanvas: Iterates through the 2D array and prints it out row by row.
+
+drawPoint: The most fundamental drawing function. It checks if the requested x and y coordinates are inside the 60x30 grid to prevent memory crashes, then places an asterisk (*).
+
+5. Mathematical Drawing Algorithms
+C
+void drawLineAlgo(int x0, int y0, int x1, int y1) { ... }
+Bresenham's Line Algorithm: A classic graphics algorithm. Because our canvas is a grid of characters, we can't draw a perfectly smooth diagonal line. Bresenham's algorithm calculates which grid cells (x, y) are closest to the ideal straight line between two points using only integer math (which is very fast).
+
+C
+void drawCirclePoints(int xc, int yc, int x, int y) { ... }
+void drawCircleAlgo(int xc, int yc, int r) { ... }
+Midpoint Circle Algorithm: Similar to the line algorithm, this determines which grid characters best approximate a curve.
+
+8-Way Symmetry: Circles are highly symmetrical. drawCirclePoints takes one calculated point and mirrors it across 8 octants, drastically reducing the math required to draw the full circle.
+
+6. The Rendering Engine
+C
+void renderShapes() {
+    initCanvas(); 
+    for (int i = 0; i < shapeCount; i++) {
+        if (!shapes[i].active) continue;
+        // ... switch statement to draw the specific shape
+    }
+}
+renderShapes(): This is the heart of the editor. Every time a shape is added, deleted, or modified, this function:
+
+Wipes the canvas clean (initCanvas).
+
+Loops through the shapes array.
+
+Skips any shape where active == 0 (deleted shapes).
+
+Feeds the coordinates of active shapes back into the line and circle algorithms.
+
+Why do it this way? If you draw a square over a circle, and then delete the square, the part of the circle underneath needs to be restored. By wiping the canvas and redrawing everything sequentially, background layers are perfectly preserved.
+
+7. CRUD Operations (Create, Read, Update, Delete)
+addShape(): Asks the user for input, creates a new Shape struct, adds it to the shapes array, and triggers a render.
+
+deleteShape(): Finds a shape by its unique id and flips its active flag to 0. It then triggers a render, which makes the shape disappear.
+
+modifyShape(): Finds a shape by its id, asks the user for new coordinates, updates the struct, and triggers a render.
+
+listShapes(): Iterates through the array and prints out the IDs and types of all active shapes to help the user manage their canvas.
+
+8. Main Program Loop
+C
+int main() {
+    initCanvas();
+    // ... while(1) loop with a switch statement
+}
+Initializes the blank canvas on startup.
+
+Uses an infinite while(1) loop combined with a switch statement to provide a continuous text-based menu. The program only stops when the user inputs 6 (Exit), which returns 0 and kills the process.
